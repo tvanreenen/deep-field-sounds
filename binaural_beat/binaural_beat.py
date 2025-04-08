@@ -70,7 +70,7 @@ def generate_binaural_beat(
     print(f"Final right channel RMS: {np.sqrt(np.mean(stereo_signal[:, 1]**2)):.2e}")
 
     # Create filename and save the file
-    filename = f"binaural_beat_{base_freq}Hz_L_{base_freq + beat_freq}Hz_R_{adjusted_duration:.1f}s.wav"
+    filename = f"binaural_beat_{base_freq}Hz_L_{base_freq + beat_freq}Hz_R_{adjusted_duration:.2f}s.wav"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     filename = os.path.join(script_dir, filename)
     
@@ -82,24 +82,40 @@ def generate_binaural_beat(
     print(f"Generated {filename}")
 
 if __name__ == '__main__':
-    # Delta wave (0.5-4 Hz) - Deep sleep
-    # Lower base freq (100 Hz) for a deeper, more soothing tone
-    generate_binaural_beat(base_freq=100, beat_freq=2)
+    # 30 Min Delta Nap
+    generate_binaural_beat(base_freq=90, beat_freq=1.5)
+
+    # Deep Delta Sleep
+    generate_binaural_beat(base_freq=100, beat_freq=2.0)
+
+    # Lucid Dream Induction (Theta)
+    generate_binaural_beat(base_freq=100, beat_freq=4.0)
     
-    # Theta wave (4-8 Hz) - Meditation
-    # Slightly higher base freq (150 Hz) maintains clarity while staying gentle
-    generate_binaural_beat(base_freq=150, beat_freq=6)
-    
-    # Alpha wave (8-12 Hz) - Relaxation
-    # Medium base freq (200 Hz) balances presence and comfort
-    generate_binaural_beat(base_freq=200, beat_freq=10)
-    
-    # Beta wave (12-30 Hz) - Focus
-    # Higher base freq (250 Hz) increases alertness while remaining pleasant
-    generate_binaural_beat(base_freq=250, beat_freq=20)
-    
-    # Gamma wave (30-100 Hz) - High cognition
-    # Highest base freq (300 Hz) promotes heightened awareness
-    generate_binaural_beat(base_freq=300, beat_freq=40)
+    # Theta Chill
+    generate_binaural_beat(base_freq=100, beat_freq=6.0)
+
+    # Evening Wind Down (High Theta)
+    generate_binaural_beat(base_freq=100, beat_freq=7.0)
+
+    # Alpha Flow State
+    generate_binaural_beat(base_freq=120, beat_freq=10.0)
+
+    # Healing Alpha Meditation (using 136.1 Hz base freq)
+    generate_binaural_beat(base_freq=136.1, beat_freq=8.0)
+
+    # Morning Wake-Up Beat (High Beta)
+    generate_binaural_beat(base_freq=140, beat_freq=20.0)
+
+    # Transcendental Meditation (Theta/Alpha edge)
+    generate_binaural_beat(base_freq=150, beat_freq=5.5)
+
+    # Pomodoro Focus Burst (Alpha/Beta edge)
+    generate_binaural_beat(base_freq=150, beat_freq=14.0)
+
+    # Mid Beta Power Boost
+    generate_binaural_beat(base_freq=180, beat_freq=18.0)
+
+    # High Gamma Clarity
+    generate_binaural_beat(base_freq=200, beat_freq=40.0)
 
     print("\nDone! All files saved.")

@@ -1,2 +1,6 @@
+cffi==1.17.1
 numpy==2.2.4
+pycparser==2.22
 scipy==1.15.2
+soundfile==0.13.1
+tqdm==4.67.1
