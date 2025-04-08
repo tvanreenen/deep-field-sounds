@@ -1,2 +1,4 @@
 .python-version
 *.wav
+.DS_Store
+.venv

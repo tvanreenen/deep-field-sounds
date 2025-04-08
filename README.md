@@ -4,6 +4,21 @@ Generate high-quality stereo audio tracks that combine **binaural beats** with *
 
 ---
 
+## Projet Setup
+
+1. Install the correct Python version
+> pyenv install $(cat .python-version)
+> pyenv local $(cat .python-version)
+
+2. Create and activate a virtual environment
+> python -m venv .venv
+> source .venv/bin/activate
+
+3. Install the dependencies
+> pip install -r requirements.txt
+
+---
+
 ## 🧠 What Are Binaural Beats?
 
 Binaural beats are an auditory illusion perceived when two slightly different frequencies are played separately in each ear. The brain interprets the difference as a rhythmic "beat," which may influence brainwave activity.
