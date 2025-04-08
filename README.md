@@ -143,11 +143,69 @@ Binaural beats are an auditory illusion perceived when two slightly different fr
 
 ### How It Works
 
-This script generates:
+This script generates seamlessly loopable binaural beats:
 - 🎵 A left ear tone at a base frequency
 - 🎵 A right ear tone at base + beat frequency
-- 🌊 Brown noise mixed equally in both channels
-- 🧪 Output as a stereo `.wav` file, normalized and ready for post-processing or publishing
+- 🔄 Seamlessly loopable audio with no audible transitions
+- 🧪 Output as a stereo `.wav` file, normalized and ready for extended listening
+
+### Signal Processing and Loopable Design
+
+The binaural beat generator uses sophisticated signal processing techniques to create high-quality, seamlessly loopable beats:
+
+1. **Pure Sine Wave Generation**: Creates clean, precise frequencies for optimal beat perception
+2. **Period Alignment**: Ensures the duration is a multiple of the beat frequency period for perfect looping
+3. **Phase Shift**: A phase shift of π (180 degrees) is added to the right channel.
+   - This causes the two sine waves to start perfectly out of phase, resulting in maximum destructive interference (the quietest point) at the beginning.
+   - Because the duration is aligned with the beat period, the amplitude envelope also ends at its minimum.
+   - This is crucial for seamless looping without a sudden jump in loudness at the loop point.
+   - Importantly, this *only* affects the starting phase of the amplitude envelope (the beat's loudness cycle); it does **not** change the frequencies of the tones sent to each ear, so the perceived beat frequency remains the same.
+4. **RMS Normalization**: Ensures consistent volume levels across different frequencies
+5. **Clipping Prevention**: Safeguards against audio distortion
+
+### Benefits of Loopable Design
+
+The loopable design, achieved through period alignment and phase shifting, provides several important advantages:
+
+- **No Audible Loop Points**: The transition between loops is smooth and imperceptible both in waveform and amplitude envelope.
+- **Extended Listening**: Perfect for meditation, sleep, or focus sessions that require extended playback
+- **Consistent Experience**: Maintains the same brainwave entrainment effect throughout the session
+- **Professional Quality**: Creates a polished, professional sound suitable for content creation
+
+### Interpreting Debug Output
+
+The script includes detailed debug information to help you understand the signal processing:
+
+```
+Generating binaural beat with base frequency 200Hz and beat frequency 10Hz:
+Adjusted duration to 5.00s to align with beat period (0.10s)
+Left channel range before normalization: -1.00e+00 to 1.00e+00
+Right channel range before normalization: -1.00e+00 to 1.00e+00
+Left channel RMS before normalization: 7.07e-01
+Right channel RMS before normalization: 7.07e-01
+Final stereo signal range: -1.00e+00 to 1.00e+00
+Final left channel RMS: 1.00e-01
+Final right channel RMS: 1.00e-01
+Scaled int16 range: -32767 to 32767
+```
+
+#### What Each Line Means:
+
+1. **Adjusted duration**: Shows the duration adjusted to align with the beat period
+2. **Channel ranges**: Shows the min/max values of each channel before normalization
+3. **Channel RMS**: The Root Mean Square value of each channel before normalization
+4. **Final stereo range**: The min/max values after normalization
+5. **Final channel RMS**: The target RMS value (0.1) that all channels are normalized to
+6. **Scaled int16 range**: The final values scaled to 16-bit PCM format
+
+#### What to Look For:
+
+- **Adjusted duration** should be close to your requested duration, with small adjustments to align with the beat period
+- **Channel ranges** should be close to ±1.0 before normalization, indicating proper sine wave generation
+- **Channel RMS** values should be approximately 0.707 (√2/2) for pure sine waves before normalization
+- **Final stereo range** should be between -1.0 and 1.0, with values closer to ±1.0 indicating a more dynamic signal
+- **Final channel RMS** should be close to 0.1, indicating proper normalization
+- **Scaled int16 range** should approach ±32767, indicating good use of the available dynamic range
 
 ### Brainwave States
 
@@ -158,3 +216,23 @@ This script generates:
 | 8 – 12 Hz      | Alpha     | Relaxation, stress relief 🌤️ |
 | 12 – 30 Hz     | Beta      | Alertness, focus ⚡ |
 | 30 – 100 Hz    | Gamma     | High-level cognition 🧠 |
+
+### Frequency Selection Guide
+
+For optimal results, consider these base frequency recommendations:
+
+- **Delta (0.5-4 Hz)**: Use a lower base frequency (100 Hz) for a deeper, more soothing tone
+- **Theta (4-8 Hz)**: Slightly higher base frequency (150 Hz) maintains clarity while staying gentle
+- **Alpha (8-12 Hz)**: Medium base frequency (200 Hz) balances presence and comfort
+- **Beta (12-30 Hz)**: Higher base frequency (250 Hz) increases alertness while remaining pleasant
+- **Gamma (30-100 Hz)**: Highest base frequency (300 Hz) promotes heightened awareness
+
+### Customization Options
+
+The script allows customization of several parameters:
+
+- **Base Frequency**: The fundamental tone (typically 100-300 Hz)
+- **Beat Frequency**: The difference between channels (determines brainwave state)
+- **Duration**: Length of the audio file in seconds (will be adjusted to align with beat period)
+- **Crossfade Duration**: Length of the fade-in and fade-out (default: 0.1 seconds)
+- **Sample Rate**: Audio quality setting (default: 44.1 kHz)
