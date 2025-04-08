@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Binaural & Colored Noise Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .slider-container { margin-bottom: 10px; }
+    label { display: block; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Dynamic Layered Sound Generator</h1>
+
+  <h2>Binaural</h2>
+
+  <div class="slider-container">
+    <label for="baseFreq">Base Frequency: <span id="baseFreqVal">200</span> Hz (<span id="baseFreqLabel">Good for Alpha</span>)</label>
+    <input type="range" id="baseFreq" min="80" max="400" step="1" value="200">
+  </div>
+  
+  <div class="slider-container">
+    <label for="beatFreq">Beat Frequency: <span id="beatFreqVal">4</span> Hz (<span id="beatRangeLabel">Theta</span>)</label>
+    <input type="range" id="beatFreq" min="0.5" max="30" step="0.1" value="4">
+  </div>
+
+  <div class="slider-container">
+    <label for="toneVol">Tone Volume: <span id="toneVolVal">0.5</span></label>
+    <input type="range" id="toneVol" min="0" max="1" step="0.01" value="0.5">
+  </div>
+  
+  <h2>Colored Noise</h2>
+  
+  <div class="slider-container">
+    <label for="noiseExp">Noise Exponent: <span id="noiseExpVal">2</span> (<span id="noiseColorLabel">Brown</span>)</label>
+    <input type="range" id="noiseExp" min="0" max="3" step="0.1" value="2">
+  </div>
+  
+  <div class="slider-container">
+    <label for="noiseVol">Noise Volume: <span id="noiseVolVal">0.5</span></label>
+    <input type="range" id="noiseVol" min="0" max="1" step="0.01" value="0.5">
+  </div>
+  
+  <button id="startBtn">Start</button>
+  <button id="stopBtn" disabled>Stop</button>
+  
+  <script>
+    // Utility: update display values for sliders and dynamic labels
+    function updateDisplay(sliderId, displayId) {
+      const slider = document.getElementById(sliderId);
+      const display = document.getElementById(displayId);
+      display.textContent = slider.value;
+      slider.addEventListener('input', () => {
+        display.textContent = slider.value;
+      });
+    }
+    updateDisplay("baseFreq", "baseFreqVal");
+    updateDisplay("beatFreq", "beatFreqVal");
+    updateDisplay("toneVol", "toneVolVal");
+    updateDisplay("noiseExp", "noiseExpVal");
+    updateDisplay("noiseVol", "noiseVolVal");
+    
+    // Function for dynamic base frequency label
+    function getBaseFreqLabel(freq) {
+      if (freq < 120) return "Good for Delta";
+      else if (freq < 180) return "Good for Theta";
+      else if (freq < 250) return "Good for Alpha";
+      else return "Good for Beta";
+    }
+    
+    // Functions for dynamic labels for beat frequency and noise exponent
+    function getBrainwaveLabel(freq) {
+      if (freq < 4) return "Delta";
+      else if (freq < 8) return "Theta";
+      else if (freq < 12) return "Alpha";
+      else return "Beta";
+    }
+    
+    function getNoiseColorLabel(exp) {
+      // Calculate boundaries between centers:
+      // White center: 0.0, Soft White: 0.5, Light Pink: 0.75, Pink: 1.0,
+      // Dark Pink: 1.25, Light Brown: 1.75, Brown: 2.0, Dark Brown: 2.5, Black: 3.0
+      
+      if (exp < (0.0 + 0.5) / 2) {             // < 0.25
+        return "White";
+      } else if (exp < (0.5 + 0.75) / 2) {       // < 0.625
+        return "Soft White";
+      } else if (exp < (0.75 + 1.0) / 2) {       // < 0.875
+        return "Light Pink";
+      } else if (exp < (1.0 + 1.25) / 2) {       // < 1.125
+        return "Pink";
+      } else if (exp < (1.25 + 1.75) / 2) {      // < 1.5
+        return "Dark Pink";
+      } else if (exp < (1.75 + 2.0) / 2) {       // < 1.875
+        return "Light Brown";
+      } else if (exp < (2.0 + 2.5) / 2) {        // < 2.25
+        return "Brown";
+      } else if (exp < (2.5 + 3.0) / 2) {        // < 2.75
+        return "Dark Brown";
+      } else {
+        return "Black";
+      }
+    }
+    
+    // Update dynamic labels when sliders change
+    const baseFreqSlider = document.getElementById("baseFreq");
+    const baseFreqLabel = document.getElementById("baseFreqLabel");
+    baseFreqSlider.addEventListener('input', () => {
+      baseFreqLabel.textContent = getBaseFreqLabel(parseFloat(baseFreqSlider.value));
+    });
+    
+    const beatFreqSlider = document.getElementById("beatFreq");
+    const beatRangeLabel = document.getElementById("beatRangeLabel");
+    beatFreqSlider.addEventListener('input', () => {
+      beatRangeLabel.textContent = getBrainwaveLabel(parseFloat(beatFreqSlider.value));
+    });
+    
+    const noiseExpSlider = document.getElementById("noiseExp");
+    const noiseColorLabel = document.getElementById("noiseColorLabel");
+    noiseExpSlider.addEventListener('input', () => {
+      noiseColorLabel.textContent = getNoiseColorLabel(parseFloat(noiseExpSlider.value));
+    });
+    
+    // Global variables for audio context and nodes
+    let audioCtx;
+    let leftOsc, rightOsc;
+    let noiseNode;
+    let leftGain, rightGain, noiseGain;
+    let leftMix, rightMix;
+    let merger;
+    let isPlaying = false;
+    
+    // Global variable for noise exponent used in the noise generator
+    let currentNoiseExp = parseFloat(noiseExpSlider.value);
+    
+    // Global state for pink and brown noise generators
+    let pinkB0 = 0, pinkB1 = 0, pinkB2 = 0, pinkB3 = 0, pinkB4 = 0, pinkB5 = 0, pinkB6 = 0;
+    let lastBrown = 0;
+    
+    function generatePinkNoiseSample() {
+      const white = Math.random() * 2 - 1;
+      pinkB0 = 0.99886 * pinkB0 + white * 0.0555179;
+      pinkB1 = 0.99332 * pinkB1 + white * 0.0750759;
+      pinkB2 = 0.96900 * pinkB2 + white * 0.1538520;
+      pinkB3 = 0.86650 * pinkB3 + white * 0.3104856;
+      pinkB4 = 0.55000 * pinkB4 + white * 0.5329522;
+      pinkB5 = -0.7616 * pinkB5 - white * 0.0168980;
+      const pink = pinkB0 + pinkB1 + pinkB2 + pinkB3 + pinkB4 + pinkB5 + pinkB6 + white * 0.5362;
+      pinkB6 = white * 0.115926;
+      return pink * 0.11;
+    }
+    
+    function generateBrownNoiseSample() {
+      const white = Math.random() * 2 - 1;
+      lastBrown = (lastBrown + (0.02 * white)) / 1.02;
+      return lastBrown * 3.5;
+    }
+    
+    function startAudio() {
+      if (isPlaying) return;
+      isPlaying = true;
+      
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Read initial parameter values from sliders
+      const baseFreq = parseFloat(document.getElementById("baseFreq").value);
+      const beatFreq = parseFloat(document.getElementById("beatFreq").value);
+      const toneVol = parseFloat(document.getElementById("toneVol").value);
+      currentNoiseExp = parseFloat(document.getElementById("noiseExp").value);
+      const noiseVol = parseFloat(document.getElementById("noiseVol").value);
+      
+      // Create binaural oscillators (sine tones)
+      leftOsc = audioCtx.createOscillator();
+      rightOsc = audioCtx.createOscillator();
+      leftOsc.frequency.value = baseFreq;
+      rightOsc.frequency.value = baseFreq + beatFreq;
+      
+      // Create gain nodes for the tones
+      leftGain = audioCtx.createGain();
+      rightGain = audioCtx.createGain();
+      leftGain.gain.value = toneVol;
+      rightGain.gain.value = toneVol;
+      
+      leftOsc.connect(leftGain);
+      rightOsc.connect(rightGain);
+      
+      // Create a ScriptProcessorNode to generate noise
+      noiseNode = audioCtx.createScriptProcessor(4096, 1, 1);
+      noiseNode.onaudioprocess = function(e) {
+        const output = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < output.length; i++) {
+          const white = Math.random() * 2 - 1;
+          const pink = generatePinkNoiseSample();
+          const brown = generateBrownNoiseSample();
+          let sample;
+          // Interpolate based on currentNoiseExp:
+          if (currentNoiseExp <= 1) {
+            sample = white * (1 - currentNoiseExp) + pink * currentNoiseExp;
+          } else {
+            sample = pink * (2 - currentNoiseExp) + brown * (currentNoiseExp - 1);
+          }
+          output[i] = sample;
+        }
+      };
+      
+      // Create a gain node for noise and set its volume
+      noiseGain = audioCtx.createGain();
+      noiseGain.gain.value = noiseVol;
+      noiseNode.connect(noiseGain);
+      
+      // Create mix nodes for left and right channels (summing tone and noise)
+      leftMix = audioCtx.createGain();
+      rightMix = audioCtx.createGain();
+      
+      leftGain.connect(leftMix);
+      noiseGain.connect(leftMix);
+      rightGain.connect(rightMix);
+      noiseGain.connect(rightMix);
+      
+      // Merge left and right channels into a stereo output
+      merger = audioCtx.createChannelMerger(2);
+      leftMix.connect(merger, 0, 0);
+      rightMix.connect(merger, 0, 1);
+      
+      merger.connect(audioCtx.destination);
+      
+      leftOsc.start();
+      rightOsc.start();
+      
+      // Enable real-time parameter changes
+      attachSliderListeners();
+      
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = false;
+    }
+    
+    function attachSliderListeners() {
+      // Base frequency: update left oscillator and right oscillator frequency accordingly and dynamic label
+      document.getElementById("baseFreq").addEventListener("input", function() {
+        const baseFreq = parseFloat(this.value);
+        leftOsc.frequency.value = baseFreq;
+        const beatFreq = parseFloat(document.getElementById("beatFreq").value);
+        rightOsc.frequency.value = baseFreq + beatFreq;
+        document.getElementById("baseFreqLabel").textContent = getBaseFreqLabel(baseFreq);
+      });
+      
+      // Beat frequency: update right oscillator frequency and dynamic label
+      document.getElementById("beatFreq").addEventListener("input", function() {
+        const beatFreq = parseFloat(this.value);
+        const baseFreq = parseFloat(document.getElementById("baseFreq").value);
+        rightOsc.frequency.value = baseFreq + beatFreq;
+        document.getElementById("beatRangeLabel").textContent = getBrainwaveLabel(beatFreq);
+      });
+      
+      // Tone volume: update both tone gain nodes
+      document.getElementById("toneVol").addEventListener("input", function() {
+        const toneVol = parseFloat(this.value);
+        leftGain.gain.value = toneVol;
+        rightGain.gain.value = toneVol;
+      });
+      
+      // Noise volume: update the noise gain node
+      document.getElementById("noiseVol").addEventListener("input", function() {
+        const noiseVol = parseFloat(this.value);
+        noiseGain.gain.value = noiseVol;
+      });
+      
+      // Noise exponent: update global currentNoiseExp and dynamic label
+      document.getElementById("noiseExp").addEventListener("input", function() {
+        currentNoiseExp = parseFloat(this.value);
+        document.getElementById("noiseColorLabel").textContent = getNoiseColorLabel(currentNoiseExp);
+      });
+    }
+    
+    function stopAudio() {
+      if (!isPlaying) return;
+      isPlaying = false;
+      
+      leftOsc.stop();
+      rightOsc.stop();
+      noiseNode.disconnect();
+      merger.disconnect();
+      audioCtx.close();
+      
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+    }
+    
+    document.getElementById("startBtn").addEventListener("click", startAudio);
+    document.getElementById("stopBtn").addEventListener("click", stopAudio);
+  </script>
+</body>
+</html>
