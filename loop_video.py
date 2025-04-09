@@ -5,7 +5,7 @@ import sys
 from datetime import datetime, timedelta
 import ffmpeg
 import soundfile as sf
-from humanize import naturalsize, naturaldelta
+from humanize import naturalsize, precisedelta
 from progress_tracker import show_progress
 
 def get_audio_file_duration(audio_file):
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     end_time = time.time()
     print(f"Completed at {datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')}")
     duration = timedelta(seconds=end_time - start_time)
-    print(f"Time taken: {naturaldelta(duration)}")
+    print(f"Time taken: {precisedelta(duration, minimum_unit="seconds")}")
     print(f"Final file size: {naturalsize(os.path.getsize(args.output))}")
     print(f"Final file written to: {os.path.abspath(args.output)}")
     print('Done!')

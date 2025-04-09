@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import soundfile as sf
 from tqdm import tqdm
-from humanize import naturalsize, naturaldelta
+from humanize import naturalsize, precisedelta
 
 def calculate_audio_duration(audio_data, sample_rate):
     return len(audio_data) / sample_rate
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     end_time = time.time()
     print(f"Completed at {datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')}")
     duration = timedelta(seconds=end_time - start_time)
-    print(f"Time taken: {naturaldelta(duration)}")
+    print(f"Time taken: {precisedelta(duration, minimum_unit="seconds")}")
     print(f"Final file size: {naturalsize(os.path.getsize(args.output))}")
     print(f"Final file written to: {os.path.abspath(args.output)}")
     print("Done!")
