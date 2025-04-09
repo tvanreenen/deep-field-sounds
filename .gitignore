@@ -2,3 +2,5 @@
 *.wav
 .DS_Store
 .venv
+*.pyc
+*.mp4

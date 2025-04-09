@@ -1,66 +1,26 @@
+import argparse
+import os
+import time
+from datetime import datetime, timedelta
 import numpy as np
 import soundfile as sf
 from tqdm import tqdm
-import argparse
-import os
-from humanize import naturalsize
+from humanize import naturalsize, naturaldelta
 
-def get_audio_duration(audio_data, sample_rate):
-    """
-    Calculate the duration of an audio file in seconds.
-    
-    Parameters:
-    - audio_data: The audio data array
-    - sample_rate: The sample rate of the audio
-    
-    Returns:
-    - float: Duration in seconds
-    """
+def calculate_audio_duration(audio_data, sample_rate):
     return len(audio_data) / sample_rate
 
-def calculate_required_repeats(input_duration, target_duration_minutes):
-    """
-    Calculate the number of repeats needed to reach the target duration.
-    
-    Parameters:
-    - input_duration: Duration of the input audio in seconds
-    - target_duration_minutes: Target duration in minutes
-    
-    Returns:
-    - int: Number of repeats needed
-    - float: Target duration in seconds
-    """
+def calculate_required_loops(input_duration, target_duration_minutes):
     target_duration_seconds = target_duration_minutes * 60
     num_repeats = int(np.ceil(target_duration_seconds / input_duration))
-    return num_repeats, target_duration_seconds
+    return num_repeats
 
-def create_long_binaural_beat(input_file, output_file, target_duration_minutes=60.0, duration_unit='minutes'):
-    """
-    Create a longer version of a binaural beat targeting a specific duration.
-    Uses a memory-efficient approach by writing chunks to disk.
-    
-    Parameters:
-    - input_file: Path to the input binaural beat file
-    - output_file: Path to save the longer binaural beat. 
-                   If None, defaults to 'long_<input_filename>' 
-                   in the same directory as the input file.
-    - target_duration_minutes: Target duration in minutes (default: 60.0)
-    - duration_unit: Unit of the target duration ('minutes' or 'hours')
-    """
-    if duration_unit == 'hours':
-        duration_str = f"{target_duration_minutes/60:.1f} hours"
-    else:
-        duration_str = f"{target_duration_minutes:.1f} minutes"
-    
-    print(f"Creating a {duration_str} version based on {input_file}...")
-    print(f"Output will be saved to: {output_file}")
-    
+def generate_audio(input_file, output_file, target_duration_minutes):    
     audio_data, sample_rate = sf.read(input_file)
-    input_duration = get_audio_duration(audio_data, sample_rate)
-    num_repeats, target_duration_seconds = calculate_required_repeats(input_duration, target_duration_minutes)
+    input_duration = calculate_audio_duration(audio_data, sample_rate)
+    num_repeats = calculate_required_loops(input_duration, target_duration_minutes)
     
     print(f"Length of sample file: {input_duration:.2f} seconds")
-    print(f"Target duration: {duration_str}")
     print(f"Number of repeats needed: {num_repeats}")
     
     with sf.SoundFile(output_file, 'w', samplerate=sample_rate, channels=audio_data.shape[1], format='WAV') as f:
@@ -79,8 +39,7 @@ def create_long_binaural_beat(input_file, output_file, target_duration_minutes=6
     
     actual_duration = num_repeats * input_duration
     print(f"Final duration: {actual_duration:.2f} seconds")
-    print(f"Final file size: {naturalsize(os.path.getsize(output_file))}")
-    print("Done!")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create a longer version of a binaural beat audio file.')
@@ -95,9 +54,16 @@ if __name__ == '__main__':
     
     if args.hours is not None:
         target_duration_minutes = args.hours * 60
-        duration_unit = 'hours'
     elif args.minutes is not None:
         target_duration_minutes = args.minutes
-        duration_unit = 'minutes'
     
-    create_long_binaural_beat(args.input, args.output, target_duration_minutes, duration_unit)
+    start_time = time.time()
+    print(f"Started at {datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')}")
+    generate_audio(args.input, args.output, target_duration_minutes)
+    end_time = time.time()
+    print(f"Completed at {datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')}")
+    duration = timedelta(seconds=end_time - start_time)
+    print(f"Time taken: {naturaldelta(duration)}")
+    print(f"Final file size: {naturalsize(os.path.getsize(args.output))}")
+    print(f"Final file written to: {os.path.abspath(args.output)}")
+    print("Done!")
