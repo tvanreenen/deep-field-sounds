@@ -1,6 +1,11 @@
 cffi==1.17.1
+humanize==4.12.2
 numpy==2.2.4
+packaging==24.2
 pycparser==2.22
+pyee==13.0.0
+python-ffmpeg==2.0.12
 scipy==1.15.2
 soundfile==0.13.1
 tqdm==4.67.1
+typing_extensions==4.13.1
