@@ -1,25 +1,10 @@
-# 🎧 Sound Generator
+# Deep Field Sounds
 
-Generate high-quality audio tracks including **colored noise** and **binaural beats** for use in sleep, meditation, focus, or relaxation content (e.g., YouTube, personal projects, sound design).
+An experimental sound synthesis project exploring the intersection of mathematics, code, and AI.
 
 ## Project Setup
 
-1. Install the correct Python version
-```
-pyenv install $(cat .python-version)
-pyenv local $(cat .python-version)
-```
-
-2. Create and activate a virtual environment
-```
-python -m venv .venv
-source .venv/bin/activate
-```
-
-3. Install the dependencies
-```
-pip install -r requirements.txt
-```
+This project uses [uv](https://github.com/astral-sh/uv) for Python package management and virtual environments. You can run the scripts directly using `uv run` without needing to install dependencies manually.
 
 ## 🎨 Colored Noise Generator
 
