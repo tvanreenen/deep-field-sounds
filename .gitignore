@@ -1,6 +1,8 @@
-.python-version
-*.wav
 .DS_Store
 .venv
+.env
 *.pyc
 *.mp4
+*.wav
+*.pxd
+__pycache__
