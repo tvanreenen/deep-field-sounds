@@ -129,10 +129,10 @@ Binaural beats are an auditory illusion perceived when two slightly different fr
 ### How It Works
 
 This script generates seamlessly loopable binaural beats:
-- 🎵 A left ear tone at a base frequency
-- 🎵 A right ear tone at base + beat frequency
-- 🔄 Seamlessly loopable audio with no audible transitions
-- 🧪 Output as a stereo `.wav` file, normalized and ready for extended listening
+- A left ear tone at a base frequency
+- A right ear tone at base + beat frequency
+- Seamlessly loopable audio with no audible transitions
+- Output as a stereo `.wav` file, normalized and ready for extended listening
 
 ### Signal Processing and Loopable Design
 
@@ -196,11 +196,11 @@ Scaled int16 range: -32767 to 32767
 
 | Beat Frequency | Brainwave | Effect |
 |----------------|-----------|--------|
-| 0.5 – 4 Hz     | Delta     | Deep sleep, unconscious states 💤 |
-| 4 – 8 Hz       | Theta     | Meditation, lucid dreaming 🌙 |
-| 8 – 12 Hz      | Alpha     | Relaxation, stress relief 🌤️ |
-| 12 – 30 Hz     | Beta      | Alertness, focus ⚡ |
-| 30 – 100 Hz    | Gamma     | High-level cognition 🧠 |
+| 0.5 – 4 Hz     | Delta     | Deep sleep, unconscious states |
+| 4 – 8 Hz       | Theta     | Meditation, lucid dreaming |
+| 8 – 12 Hz      | Alpha     | Relaxation, stress relief |
+| 12 – 30 Hz     | Beta      | Alertness, focus |
+| 30 – 100 Hz    | Gamma     | High-level cognition |
 
 ### Frequency Selection Guide
 
