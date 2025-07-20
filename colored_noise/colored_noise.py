@@ -1,8 +1,11 @@
 import numpy as np
 from scipy.io.wavfile import write
 import os
+import argparse
+from datetime import datetime, precisedelta
+import time
 
-def generate_colored_noise(alpha, duration_sec=5, sample_rate=44100):
+def generate_colored_noise(alpha, duration_sec=5, sample_rate=44100, apply_alpha_scaling=True):
     """
     Generate colored noise with a given spectral exponent alpha.
     
@@ -10,6 +13,7 @@ def generate_colored_noise(alpha, duration_sec=5, sample_rate=44100):
         alpha (float): Spectral exponent (0 = white, 1 = pink, 2 = brown)
         duration_sec (int): Duration in seconds
         sample_rate (int): Sampling rate in Hz  
+        apply_alpha_scaling (bool): Whether to apply special scaling for alpha > 1
     
     Returns:
       numpy.ndarray: 16-bit PCM formatted noise.
@@ -29,12 +33,11 @@ def generate_colored_noise(alpha, duration_sec=5, sample_rate=44100):
     min_freq = 20.0  # 20 Hz minimum
     freqs = np.maximum(freqs, min_freq/sample_rate)
     
-    # Create a smoother power law scaling
-    # Base scaling factor that increases with alpha
+    # Base scaling factor
     base_scale = 1.0
     
-    # For alpha > 1.0, gradually reduce the scaling to prevent too much low-frequency dominance
-    if alpha > 1.0:
+    # For alpha > 1.0, we can optionally reduce the scaling to prevent too much low-frequency dominance
+    if alpha > 1.0 and apply_alpha_scaling:
         # Reduce the effective alpha for higher values to prevent extreme low-frequency dominance
         effective_alpha = alpha * (1.0 - 0.25 * (alpha - 1.0))
     else:
@@ -93,6 +96,7 @@ def save_wav(signal, filename, sample_rate=44100):
     write(filename, sample_rate, scaled)
 
 if __name__ == '__main__':
+    # Common noise colors for reference
     noise_colors = {
         0.0: 'white',
         0.3: 'silver',
@@ -102,11 +106,37 @@ if __name__ == '__main__':
         1.6: 'copper',
         2.0: 'brown'
     }
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    for alpha, name in noise_colors.items():
-        print(f"\nGenerating {name} noise (α={alpha}):")
-        filename = os.path.join(script_dir, f"colored_noise_{name}.wav")
-        noise = generate_colored_noise(alpha)
-        save_wav(noise, filename)
-
-    print("\nDone! All files saved.")
+    
+    parser = argparse.ArgumentParser(description='Generate colored noise audio files.')
+    parser.add_argument('-o', '--output-dir', type=str, default='.', help='Output directory for generated files')
+    parser.add_argument('-d', '--duration', type=int, default=5, help='Duration of each noise file in seconds')
+    parser.add_argument('-r', '--sample-rate', type=int, default=44100, help='Sample rate in Hz')
+    parser.add_argument('--no-alpha-scaling', action='store_true', 
+                       help='Disable special scaling for alpha > 1 (use true exponent values)')
+    parser.add_argument('-e', '--exponents', nargs='+', type=float, 
+                       help='Exponent values to generate (default: all common colors)')
+    
+    args = parser.parse_args()
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    # Use provided exponents or default to common colors
+    exponents_to_generate = args.exponents if args.exponents else noise_colors.keys()
+    
+    start_time = time.time()
+    print(f"Started at {datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    for alpha in exponents_to_generate:
+        print(f"\nGenerating noise with α={alpha}")
+        filename = os.path.join(args.output_dir, f"colored_noise_alpha_{alpha}.wav")
+        noise = generate_colored_noise(alpha, duration_sec=args.duration, 
+                                     sample_rate=args.sample_rate, 
+                                     apply_alpha_scaling=not args.no_alpha_scaling)
+        save_wav(noise, filename, sample_rate=args.sample_rate)
+    
+    end_time = time.time()
+    print(f"\nCompleted at {datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')}")
+    duration = precisedelta(seconds=end_time - start_time)
+    print(f"Time taken: {duration}")
+    print("Done!")
